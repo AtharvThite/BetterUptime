@@ -19,23 +19,66 @@ import {
     RefreshCw,
     Loader2,
 } from "lucide-react"
-import { SignedIn, UserButton, useAuth } from "@clerk/nextjs"
+import { SignedIn, UserButton, useAuth, SignInButton } from "@clerk/nextjs"
 import { useTheme } from "next-themes"
 import Link from "next/link"
 import { useWebsites } from "@/hooks/useWebsites"
 import { AddWebsiteModal } from "@/components/addWebsiteModal"
 
+// Debug component to show raw data
+function DebugPanel({ data }: { data: any }) {
+    const [showDebug, setShowDebug] = useState(false)
+
+    return (
+        <div className="mb-4">
+            <Button variant="outline" size="sm" onClick={() => setShowDebug(!showDebug)} className="mb-2">
+                {showDebug ? "Hide" : "Show"} Debug Info
+            </Button>
+
+            {showDebug && (
+                <div className="p-4 bg-muted/50 rounded-lg text-sm font-mono overflow-auto max-h-96">
+                    <pre>{JSON.stringify(data, null, 2)}</pre>
+                </div>
+            )}
+        </div>
+    )
+}
+
 interface UptimeTicksProps {
-    ticks: boolean[]
+    ticks: ("up" | "down" | "unknown")[]
     timestamps?: string[]
 }
 
 function UptimeTicks({ ticks, timestamps }: UptimeTicksProps) {
+    const getTickColor = (status: "up" | "down" | "unknown") => {
+        switch (status) {
+            case "up":
+                return "bg-green-500"
+            case "down":
+                return "bg-red-500"
+            case "unknown":
+            default:
+                return "bg-gray-400"
+        }
+    }
+
+    const getTickLabel = (status: "up" | "down" | "unknown") => {
+        switch (status) {
+            case "up":
+                return "Up"
+            case "down":
+                return "Down"
+            case "unknown":
+            default:
+                return "Unknown"
+        }
+    }
+
     return (
         <div className="flex items-center space-x-1">
             <span className="text-sm text-muted-foreground mr-2">Last 30 min:</span>
             <div className="flex space-x-1">
-                {ticks.map((isUp, index) => {
+                {ticks.map((status, index) => {
                     const timeAgo =
                         timestamps && timestamps[index]
                             ? formatLastCheck(timestamps[index])
@@ -43,8 +86,8 @@ function UptimeTicks({ ticks, timestamps }: UptimeTicksProps) {
                     return (
                         <div
                             key={index}
-                            className={`w-3 h-6 rounded-sm cursor-help ${isUp ? "bg-green-500" : "bg-red-500"}`}
-                            title={`${timeAgo}: ${isUp ? "Up" : "Down"}`}
+                            className={`w-3 h-6 rounded-sm cursor-help ${getTickColor(status)}`}
+                            title={`${timeAgo}: ${getTickLabel(status)}`}
                         />
                     )
                 })}
@@ -53,24 +96,40 @@ function UptimeTicks({ ticks, timestamps }: UptimeTicksProps) {
     )
 }
 
-function StatusCircle({ status, size = "md" }: { status: "up" | "down"; size?: "sm" | "md" | "lg" }) {
+function StatusCircle({ status, size = "md" }: { status: "up" | "down" | "unknown"; size?: "sm" | "md" | "lg" }) {
     const sizeClasses = {
         sm: "w-3 h-3",
-        md: "w-4 w-4",
+        md: "w-4 h-4",
         lg: "w-6 h-6",
     }
 
+    const getStatusColor = (status: "up" | "down" | "unknown") => {
+        switch (status) {
+            case "up":
+                return "bg-green-500"
+            case "down":
+                return "bg-red-500"
+            case "unknown":
+            default:
+                return "bg-gray-400"
+        }
+    }
+
+    const getStatusIcon = (status: "up" | "down" | "unknown") => {
+        switch (status) {
+            case "up":
+                return <CheckCircle className="w-4 h-4 text-white" />
+            case "down":
+                return <AlertCircle className="w-4 h-4 text-white" />
+            case "unknown":
+            default:
+                return <Clock className="w-4 h-4 text-white" />
+        }
+    }
+
     return (
-        <div
-            className={`${sizeClasses[size]} rounded-full ${status === "up" ? "bg-green-500" : "bg-red-500"
-                } flex items-center justify-center`}
-        >
-            {size === "lg" &&
-                (status === "up" ? (
-                    <CheckCircle className="w-4 h-4 text-white" />
-                ) : (
-                    <AlertCircle className="w-4 h-4 text-white" />
-                ))}
+        <div className={`${sizeClasses[size]} rounded-full ${getStatusColor(status)} flex items-center justify-center`}>
+            {size === "lg" && getStatusIcon(status)}
         </div>
     )
 }
@@ -105,38 +164,61 @@ function extractDomainName(url: string): string {
 export default function Dashboard() {
     const { theme, setTheme } = useTheme()
     const [mounted, setMounted] = useState(false)
-    const { isSignedIn, isLoaded } = useAuth()
+    const { isSignedIn, isLoaded, getToken } = useAuth()
     const { websites: rawWebsites, loading, error, refreshWebsites } = useWebsites()
 
-    // Debug logging
+    // Enhanced debug logging
     useEffect(() => {
-        console.log("Dashboard Debug Info:", {
-            isLoaded,
-            isSignedIn,
-            loading,
-            error,
-            rawWebsites,
-            websitesLength: rawWebsites?.length,
-        })
-    }, [isLoaded, isSignedIn, loading, error, rawWebsites])
+        const debugInfo = {
+            timestamp: new Date().toISOString(),
+            clerk: {
+                isLoaded,
+                isSignedIn,
+            },
+            hook: {
+                loading,
+                error,
+                rawWebsites,
+                websitesType: typeof rawWebsites,
+                websitesIsArray: Array.isArray(rawWebsites),
+                websitesLength: rawWebsites?.length,
+            },
+            config: {
+                apiUrl: process.env.NEXT_PUBLIC_API_BACKEND_URL,
+            },
+        }
+
+        console.log("🔍 Dashboard Debug Info:", debugInfo)
+
+        // Test token availability
+        if (isSignedIn && isLoaded) {
+            getToken()
+                .then((token) => {
+                    console.log("🔑 Token available:", !!token, token ? "Token length: " + token.length : "No token")
+                })
+                .catch((err) => {
+                    console.error("❌ Token error:", err)
+                })
+        }
+    }, [isLoaded, isSignedIn, loading, error, rawWebsites, getToken])
 
     useEffect(() => {
         setMounted(true)
     }, [])
 
-    // Wait for Clerk to load
+    // Wait for everything to load
     if (!mounted || !isLoaded) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
                     <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-4" />
-                    <p>Loading...</p>
+                    <p>Loading application...</p>
                 </div>
             </div>
         )
     }
 
-    // Check if user is signed in
+    // Check authentication
     if (!isSignedIn) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
@@ -144,9 +226,9 @@ export default function Dashboard() {
                     <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h2 className="text-2xl font-bold mb-2">Authentication Required</h2>
                     <p className="text-muted-foreground mb-6">Please sign in to view your dashboard.</p>
-                    <Button asChild>
-                        <Link href="/sign-in">Sign In</Link>
-                    </Button>
+                    <SignInButton>
+                        <Button>Sign In</Button>
+                    </SignInButton>
                 </div>
             </div>
         )
@@ -155,16 +237,36 @@ export default function Dashboard() {
     // Show loading state
     if (loading) {
         return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-center">
-                    <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-4" />
-                    <p>Loading dashboard...</p>
-                </div>
+            <div className="min-h-screen bg-background">
+                <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-50">
+                    <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+                        <div className="flex items-center space-x-2">
+                            <Activity className="h-8 w-8 text-primary" />
+                            <span className="text-2xl font-bold">Better UpTime</span>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                                {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                            </Button>
+                            <SignedIn>
+                                <UserButton />
+                            </SignedIn>
+                        </div>
+                    </div>
+                </header>
+                <main className="container mx-auto px-4 py-8">
+                    <div className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                            <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-4" />
+                            <p>Loading your monitors...</p>
+                        </div>
+                    </div>
+                </main>
             </div>
         )
     }
 
-    // Show error state
+    // Show error state with more details
     if (error) {
         return (
             <div className="min-h-screen bg-background">
@@ -185,16 +287,38 @@ export default function Dashboard() {
                     </div>
                 </header>
                 <main className="container mx-auto px-4 py-8">
-                    <Alert variant="destructive">
+                    <Alert variant="destructive" className="mb-4">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="flex justify-between items-center">
-                            <span>{error}</span>
-                            <Button variant="outline" size="sm" onClick={refreshWebsites}>
-                                <RefreshCw className="h-4 w-4 mr-2" />
-                                Retry
-                            </Button>
+                        <AlertDescription>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <strong>Error loading monitors:</strong>
+                                    <br />
+                                    {error}
+                                </div>
+                                <Button variant="outline" size="sm" onClick={refreshWebsites}>
+                                    <RefreshCw className="h-4 w-4 mr-2" />
+                                    Retry
+                                </Button>
+                            </div>
                         </AlertDescription>
                     </Alert>
+
+                    <DebugPanel
+                        data={{
+                            error,
+                            rawWebsites,
+                            loading,
+                            isSignedIn,
+                            isLoaded,
+                            apiUrl: process.env.NEXT_PUBLIC_API_BACKEND_URL,
+                        }}
+                    />
+
+                    <div className="text-center py-8">
+                        <h2 className="text-xl font-semibold mb-4">Try adding a monitor to test the connection</h2>
+                        <AddWebsiteModal onWebsiteAdded={refreshWebsites} />
+                    </div>
                 </main>
             </div>
         )
@@ -202,7 +326,7 @@ export default function Dashboard() {
 
     const safeWebsites = Array.isArray(rawWebsites) ? rawWebsites : []
 
-    // Show empty state if no websites
+    // Show empty state with debug info
     if (safeWebsites.length === 0) {
         return (
             <div className="min-h-screen bg-background">
@@ -226,10 +350,29 @@ export default function Dashboard() {
                     </div>
                 </header>
                 <main className="container mx-auto px-4 py-8">
+                    <DebugPanel
+                        data={{
+                            message: "No websites found",
+                            rawWebsites,
+                            safeWebsites,
+                            loading,
+                            error,
+                            isSignedIn,
+                            isLoaded,
+                            apiUrl: process.env.NEXT_PUBLIC_API_BACKEND_URL,
+                        }}
+                    />
+
                     <div className="text-center py-12">
                         <Globe className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                         <h2 className="text-2xl font-bold mb-2">No monitors yet</h2>
-                        <p className="text-muted-foreground mb-6">Start monitoring your websites by adding your first monitor.</p>
+                        <p className="text-muted-foreground mb-6">
+                            {rawWebsites === null
+                                ? "API returned null data"
+                                : rawWebsites === undefined
+                                    ? "API returned undefined data"
+                                    : "Start monitoring your websites by adding your first monitor."}
+                        </p>
                         <AddWebsiteModal onWebsiteAdded={refreshWebsites} />
                     </div>
                 </main>
@@ -237,33 +380,58 @@ export default function Dashboard() {
         )
     }
 
+    // Process websites data
     const websites = safeWebsites.map((website) => {
         const ticks = Array.isArray(website.ticks) ? website.ticks : []
         const recentTicks = ticks
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
             .slice(0, 10)
 
-        const uptimeTicks =
+        // Map tick statuses to three states
+        const uptimeTicks: ("up" | "down" | "unknown")[] =
             recentTicks.length > 0
-                ? recentTicks.map((tick) => tick.status === "up" || tick.status === "online" || tick.status === "success")
-                : Array(10).fill(true)
+                ? recentTicks.map((tick) => {
+                    if (tick.status === "up" || tick.status === "online" || tick.status === "success") {
+                        return "up"
+                    } else if (
+                        tick.status === "down" ||
+                        tick.status === "offline" ||
+                        tick.status === "error" ||
+                        tick.status === "failed"
+                    ) {
+                        return "down"
+                    } else {
+                        return "unknown"
+                    }
+                })
+                : Array(10).fill("unknown" as const)
 
+        // Pad with unknown if we have fewer than 10 ticks
         while (uptimeTicks.length < 10) {
-            uptimeTicks.unshift(true)
+            uptimeTicks.unshift("unknown")
         }
 
-        const currentStatus =
-            recentTicks.length > 0 ? (["up", "online", "success"].includes(recentTicks[0].status) ? "up" : "down") : "up"
+        // Determine current status
+        const currentStatus: "up" | "down" | "unknown" =
+            recentTicks.length > 0
+                ? ["up", "online", "success"].includes(recentTicks[0].status)
+                    ? "up"
+                    : ["down", "offline", "error", "failed"].includes(recentTicks[0].status)
+                        ? "down"
+                        : "unknown"
+                : "unknown"
 
-        const upTicks = uptimeTicks.filter(Boolean).length
-        const uptimePercentage = uptimeTicks.length > 0 ? (upTicks / uptimeTicks.length) * 100 : 100
+        // Calculate uptime percentage (excluding unknown states)
+        const knownTicks = uptimeTicks.filter((tick) => tick !== "unknown")
+        const upTicks = uptimeTicks.filter((tick) => tick === "up").length
+        const uptimePercentage = knownTicks.length > 0 ? (upTicks / knownTicks.length) * 100 : 0
 
         const avgResponseTime =
             recentTicks.length > 0
                 ? Math.round(recentTicks.reduce((sum, tick) => sum + (tick.latencyy || 0), 0) / recentTicks.length)
                 : 0
 
-        const incidents = uptimeTicks.filter((tick) => !tick).length
+        const incidents = uptimeTicks.filter((tick) => tick === "down").length
         const lastCheck = recentTicks.length > 0 ? formatLastCheck(recentTicks[0].createdAt) : "Never"
 
         return {
@@ -282,6 +450,7 @@ export default function Dashboard() {
 
     const upSites = websites.filter((site) => site.status === "up").length
     const downSites = websites.filter((site) => site.status === "down").length
+    const unknownSites = websites.filter((site) => site.status === "unknown").length
     const totalIncidents = websites.reduce((sum, site) => sum + site.incidents, 0)
     const avgUptime = websites.length > 0 ? websites.reduce((sum, site) => sum + site.uptime, 0) / websites.length : 0
 
@@ -310,6 +479,18 @@ export default function Dashboard() {
 
             {/* Main Content */}
             <main className="container mx-auto px-4 py-8">
+                {/* Debug Panel */}
+                <DebugPanel
+                    data={{
+                        websitesFound: websites.length,
+                        rawWebsites,
+                        processedWebsites: websites,
+                        loading,
+                        error,
+                        isSignedIn,
+                        isLoaded,
+                    }}
+                />
 
                 {/* Page Header */}
                 <div className="flex justify-between items-center mb-8">
@@ -336,7 +517,7 @@ export default function Dashboard() {
                         <CardContent>
                             <div className="text-2xl font-bold">{websites.length}</div>
                             <p className="text-xs text-muted-foreground">
-                                {upSites} up, {downSites} down
+                                {upSites} up, {downSites} down{unknownSites > 0 && `, ${unknownSites} unknown`}
                             </p>
                         </CardContent>
                     </Card>
@@ -378,7 +559,7 @@ export default function Dashboard() {
                 {/* Monitors List */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Your Monitors</CardTitle>
+                        <CardTitle>Your Monitors ({websites.length})</CardTitle>
                         <CardDescription>Click on a monitor to view detailed uptime information</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -388,15 +569,23 @@ export default function Dashboard() {
                                     <AccordionTrigger className="hover:no-underline">
                                         <div className="flex items-center justify-between w-full mr-4">
                                             <div className="flex items-center space-x-4">
-                                                <StatusCircle status={website.status as "up" | "down"} size="lg" />
+                                                <StatusCircle status={website.status as "up" | "down" | "unknown"} size="lg" />
                                                 <div className="text-left">
                                                     <div className="font-semibold">{website.name}</div>
                                                     <div className="text-sm text-muted-foreground">{website.url}</div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center space-x-4">
-                                                <Badge variant={website.status === "up" ? "default" : "destructive"}>
-                                                    {website.status === "up" ? "Online" : "Offline"}
+                                                <Badge
+                                                    variant={
+                                                        website.status === "up"
+                                                            ? "default"
+                                                            : website.status === "down"
+                                                                ? "destructive"
+                                                                : "secondary"
+                                                    }
+                                                >
+                                                    {website.status === "up" ? "Online" : website.status === "down" ? "Offline" : "Unknown"}
                                                 </Badge>
                                                 <div className="text-right">
                                                     <div className="text-sm font-medium">{website.uptime}%</div>
@@ -418,10 +607,12 @@ export default function Dashboard() {
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <div className="bg-muted/50 rounded-lg p-4">
                                                     <div className="flex items-center space-x-2 mb-2">
-                                                        <StatusCircle status={website.status as "up" | "down"} />
+                                                        <StatusCircle status={website.status as "up" | "down" | "unknown"} />
                                                         <span className="font-medium">Current Status</span>
                                                     </div>
-                                                    <p className="text-2xl font-bold">{website.status === "up" ? "Online" : "Offline"}</p>
+                                                    <p className="text-2xl font-bold">
+                                                        {website.status === "up" ? "Online" : website.status === "down" ? "Offline" : "Unknown"}
+                                                    </p>
                                                     <p className="text-sm text-muted-foreground">Last checked {website.lastCheck}</p>
                                                 </div>
 
