@@ -28,7 +28,7 @@ model Website {
   disabled Boolean       @default(false)
   //user   User   @relation(fields: [userId], references: [id])
 }
-
+ 
 model Validator {
   id        String        @id @default(uuid())
   publicKey String        @unique

@@ -1,9 +1,11 @@
 import express from "express";
 import { authMiddleware } from "./middleware";
 import {prismaClient} from "db/client";
+import cors from "cors";
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 app.post("/api/v1/website", authMiddleware, async (req, res) => {
     const userId = req.userId!;
@@ -43,6 +45,9 @@ app.get("/api/v1/websites", authMiddleware, async (req,res) => {
         where: {
             userId,
             disabled: false
+        },
+        include: {
+            ticks: true
         }
     });
     res.json(websites);
@@ -67,4 +72,6 @@ app.delete("/api/v1/website", authMiddleware, async (req, res) => {
 });
 
 
-app.listen(3000);
+app.listen(8080, () => {
+    console.log("App running on port 8080.");
+});
