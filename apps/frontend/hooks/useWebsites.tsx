@@ -44,7 +44,7 @@ export function useWebsites(): UseWebsitesReturn {
 
             const res = await axios.get(`${API_BACKEND_URL}/api/v1/websites`, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: token,
                 },
             })
 

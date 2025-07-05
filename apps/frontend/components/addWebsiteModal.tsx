@@ -74,7 +74,7 @@ export function AddWebsiteModal({ onWebsiteAdded }: AddWebsiteModalProps) {
                 url, 
             }, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: token,
                 },
             }).then(() => {
                 refreshWebsites();

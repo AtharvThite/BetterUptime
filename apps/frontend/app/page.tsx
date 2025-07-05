@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -17,13 +18,11 @@ import {
 } from "lucide-react"
 import { SignUpButton } from "@clerk/nextjs"
 import Link from "next/link"
-import { useTheme } from "next-themes"
 import { Appbar } from "@/components/Appbar"
 
 export default function LandingPage() {
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [mounted, setMounted] = useState(false)
-    const { theme, setTheme } = useTheme()
+    const router = useRouter();
 
     useEffect(() => {
         setMounted(true)
@@ -103,7 +102,7 @@ export default function LandingPage() {
                 "All alert channels",
                 "Unlimited data retention",
                 "White-label status pages",
-                "Priority support", 
+                "Priority support",
                 "Custom integrations",
             ],
             popular: false,
@@ -128,6 +127,11 @@ export default function LandingPage() {
                         <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
                             Monitor your websites, APIs, and services with our powerful uptime monitoring platform. Get instant alerts and detailed analytics to keep your business running smoothly.
                         </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+                            <div className="flex items-center space-x-2">
+                                <Button onClick={() => router.push("/dashboard")} size="lg">Start Monitoring <Activity className="h-6 w-6" /></Button>
+                            </div>
+                        </div>
                         <div className="flex flex-wrap justify-center items-center gap-8 text-sm text-muted-foreground">
                             <div className="flex items-center space-x-2">
                                 <CheckCircle className="h-4 w-4 text-green-500" />
