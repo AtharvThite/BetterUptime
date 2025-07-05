@@ -1,4 +1,5 @@
 "use client"
+
 import { useAuth } from "@clerk/nextjs"
 import { useEffect, useState } from "react"
 import axios from "axios"
@@ -47,14 +48,19 @@ export function useWebsites(): UseWebsitesReturn {
                 },
             })
 
-            setWebsites(res.data.websites || [])
-        } 
-        catch (err: any) {
+            const rawWebsites = res.data || []
+
+            const sanitizedWebsites = rawWebsites.map((website: any) => ({
+                ...website,
+                ticks: Array.isArray(website.ticks) ? website.ticks : [],
+            }))
+
+            setWebsites(sanitizedWebsites)
+        } catch (err: any) {
             console.error("Error fetching websites:", err)
             setError(err.response?.data?.message || "Failed to fetch websites")
-            setWebsites([]) // Ensure we always have an array
-        } 
-        finally {
+            setWebsites([]) // Always set as array to prevent crashes
+        } finally {
             setLoading(false)
         }
     }
@@ -62,12 +68,7 @@ export function useWebsites(): UseWebsitesReturn {
     useEffect(() => {
         if (isLoaded) {
             refreshWebsites()
-            const interval = setInterval(
-                () => {
-                    refreshWebsites()
-                },
-                1000 * 60 * 1,
-            ) // 1 minute
+            const interval = setInterval(refreshWebsites, 1000 * 60 * 1) // every 1 minute
             return () => clearInterval(interval)
         }
     }, [isLoaded])
