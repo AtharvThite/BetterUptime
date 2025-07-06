@@ -1,135 +1,85 @@
-# Turborepo starter
+# 🌐 Better UpTime — Decentralized Uptime Monitoring Platform
 
-This Turborepo starter is maintained by the Turborepo core team.
+Better UpTime is a Web3-powered, decentralized uptime monitoring SaaS platform. Unlike traditional services that rely on centralized servers, **Better UpTime** utilizes a distributed network of validators across the globe to check website availability in real-time.
 
-## Using this example
+If your site goes down, Better UpTime notifies you **instantly**—ensuring you can act before your users even notice.
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
-```
+## 🚀 Key Features
 
-## What's inside?
+- ✅ **Decentralized Monitoring**  
+  Monitoring is performed by independent nodes spread across different locations—ensuring tamper-resistant, censorship-free reliability.
 
-This Turborepo includes the following packages/apps:
+- 🔔 **Real-Time Alerts**  (Not yet implemented)
+  Receive immediate alerts via email, SMS, or Web3-compatible notifications when your site experiences downtime.
 
-### Apps and Packages
+- 🌍 **Global Redundancy**  
+  Validators from multiple geolocations eliminate false positives and ensure more accurate downtime detection.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- 📊 **Transparency & Proof of Checks**  
+  Each uptime check is logged on-chain or IPFS for full transparency and auditability.
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+- 🪙 **Token-Based Incentives** *(not yet implemented)*  
+  Nodes earn tokens for performing checks, incentivizing network health and decentralization.
 
-### Utilities
+- 🛠️ **Customizable Dashboards**  
+  Easily manage and monitor multiple sites from a sleek and responsive dashboard.
 
-This Turborepo has some additional tools already setup for you:
+---
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+## 📦 Tech Stack
 
-### Build
+| Layer         | Tools / Frameworks                      |
+|---------------|------------------------------------------|
+| Frontend      | Next.js, Tailwind CSS, shadcn/ui         |
+| Backend       | Node.js, Express API Routes              |
+| Smart Contracts | Solana (Anchor), Web3.js               |
+| Database      | PostgreSQL (via Prisma ORM)              |
+| Auth          | Clerk                                    |
+| Infra         | Bun / Vercel / Docker                    |
 
-To build all apps and packages, run the following command:
+---
 
-```
-cd my-turborepo
+## 🧠 How It Works
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+1. **User registers a website** for uptime monitoring.
+2. The **decentralized validator network** is notified to begin periodic health checks.
+3. If a validator detects downtime, it **submits proof of failure** to the smart contract.
+4. The platform aggregates confirmations from multiple validators.
+5. Upon verified downtime, the user is **instantly alerted** through their preferred channels.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+---
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## 📸 Screenshots
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+> _Add screenshots/gifs of the dashboard, alert system, and blockchain check logs here._
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+---
 
-### Develop
+## 📈 Roadmap
 
-To develop all apps and packages, run the following command:
+- [x] Basic site check + alerting
+- [x] User authentication & dashboard
+- [x] Global node simulation
+- [ ] On-chain proof-of-check integration (Solana)
+- [ ] Token staking & rewards
+- [ ] Mobile app (React Native or Flutter)
+- [ ] Public validator onboarding
 
-```
-cd my-turborepo
+---
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+## 🛡️ Why Decentralized Monitoring?
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+Traditional uptime checkers can suffer from:
+- Centralized failure points
+- Limited geographic validation
+- Black-box alerting systems
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+Better UpTime solves this by distributing the workload and proof mechanism, making it:
+- **Censorship-resistant**
+- **Verifiable**
+- **Tamper-proof**
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+---
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
