@@ -12,7 +12,7 @@ interface Website {
         id: string
         createdAt: string
         status: string
-        latencyy: number
+        latency: number
     }[]
 }
 
