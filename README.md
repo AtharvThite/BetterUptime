@@ -53,7 +53,18 @@ If your site goes down, Better UpTime notifies you **instantly**—ensuring you 
 
 ## 📸 Screenshots
 
-> _Add screenshots/gifs of the dashboard, alert system, and blockchain check logs here._
+Landing page : 
+![Screenshot 2025-07-06 204828](https://github.com/user-attachments/assets/864f32c4-1301-430e-b40b-52a22ea291ed)
+
+![Screenshot 2025-07-06 204849](https://github.com/user-attachments/assets/45954d73-3a08-4333-aed7-79678179b0bd)
+
+
+User Dashboard : 
+![Screenshot 2025-07-06 205020](https://github.com/user-attachments/assets/3f707fee-8c97-4b7d-9499-4a864d32c4c7)
+
+![Screenshot 2025-07-06 205030](https://github.com/user-attachments/assets/db5cc60b-8d28-4715-a1cf-2a24220308e9)
+
+![Screenshot 2025-07-06 205048](https://github.com/user-attachments/assets/0b82b089-0e6f-4845-8d5b-dd5075933e73)
 
 ---
 
