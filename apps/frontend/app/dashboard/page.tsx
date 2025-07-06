@@ -7,6 +7,14 @@ import { Badge } from "@/components/ui/badge"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   Activity,
   AlertCircle,
   CheckCircle,
@@ -18,29 +26,74 @@ import {
   Sun,
   RefreshCw,
   Loader2,
+  Trash2,
 } from "lucide-react"
 import { SignedIn, UserButton, useAuth } from "@clerk/nextjs"
 import { useTheme } from "next-themes"
 import Link from "next/link"
 import { useWebsites } from "@/hooks/useWebsites"
 import { AddWebsiteModal } from "@/components/addWebsiteModal"
+import axios from "axios"
+import { API_BACKEND_URL } from "@/config"
 
-// Debug component to show raw data
-function DebugPanel({ data }: { data: any }) {
-  const [showDebug, setShowDebug] = useState(false)
+// Delete confirmation dialog component
+function DeleteWebsiteDialog({
+  website,
+  open,
+  onOpenChange,
+  onConfirm,
+  loading,
+}: {
+  website: { id: string; name: string; url: string } | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onConfirm: () => void
+  loading: boolean
+}) {
+  if (!website) return null
 
   return (
-    <div className="mb-4">
-      <Button variant="outline" size="sm" onClick={() => setShowDebug(!showDebug)} className="mb-2">
-        {showDebug ? "Hide" : "Show"} Debug Info
-      </Button>
-
-      {showDebug && (
-        <div className="p-4 bg-muted/50 rounded-lg text-sm font-mono overflow-auto max-h-96">
-          <pre>{JSON.stringify(data, null, 2)}</pre>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete Website Monitor</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete the monitor for <strong>{website.name}</strong>?
+            <br />
+            <span className="text-sm text-muted-foreground mt-2 block">{website.url}</span>
+          </DialogDescription>
+        </DialogHeader>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 my-4">
+          <div className="flex items-start space-x-2">
+            <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-destructive">This action cannot be undone</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                All monitoring data and history for this website will be permanently deleted.
+              </p>
+            </div>
+          </div>
         </div>
-      )}
-    </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={onConfirm} disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Monitor
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -186,6 +239,46 @@ export default function Dashboard() {
   const [mounted, setMounted] = useState(false)
   const { isSignedIn, isLoaded, getToken } = useAuth()
   const { websites: rawWebsites, loading, error, refreshWebsites } = useWebsites()
+
+  // Delete dialog state
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean
+    website: { id: string; name: string; url: string } | null
+    loading: boolean
+  }>({
+    open: false,
+    website: null,
+    loading: false,
+  })
+
+  // Delete website function
+  const handleDeleteWebsite = async () => {
+    if (!deleteDialog.website) return
+
+    setDeleteDialog((prev) => ({ ...prev, loading: true }))
+
+    try {
+      const token = await getToken()
+      if (!token) {
+        throw new Error("Authentication required")
+      }
+
+      await axios.delete(`${API_BACKEND_URL}/api/v1/website/?websiteId=${deleteDialog.website.id}`, {
+        headers: {
+          Authorization: token,
+        },
+      })
+
+      // Close dialog and refresh data
+      setDeleteDialog({ open: false, website: null, loading: false })
+      await refreshWebsites()
+    } catch (err: any) {
+      console.error("Error deleting website:", err)
+      // You could add a toast notification here for better UX
+      alert(err.response?.data?.message || "Failed to delete website monitor")
+      setDeleteDialog((prev) => ({ ...prev, loading: false }))
+    }
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -416,22 +509,7 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Debug Panel */}
-        <DebugPanel
-          data={{
-            websitesFound: websites.length,
-            rawWebsites: rawWebsites?.slice(0, 1), // Show only first website to avoid clutter
-            processedWebsites: websites.slice(0, 1), // Show only first processed website
-            statusMapping: {
-              Good: "up",
-              Bad: "down",
-              Unknown: "unknown",
-            },
-            loading,
-            error,
-          }}
-        />
-
+    
         {/* Page Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -587,6 +665,25 @@ export default function Dashboard() {
                         <Button variant="outline" size="sm">
                           Test Now
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 bg-transparent"
+                          onClick={() =>
+                            setDeleteDialog({
+                              open: true,
+                              website: {
+                                id: website.id,
+                                name: website.name,
+                                url: website.url,
+                              },
+                              loading: false,
+                            })
+                          }
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </Button>
                       </div>
                     </div>
                   </AccordionContent>
@@ -595,6 +692,15 @@ export default function Dashboard() {
             </Accordion>
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteWebsiteDialog
+          website={deleteDialog.website}
+          open={deleteDialog.open}
+          onOpenChange={(open) => setDeleteDialog((prev) => ({ ...prev, open }))}
+          onConfirm={handleDeleteWebsite}
+          loading={deleteDialog.loading}
+        />
       </main>
     </div>
   )

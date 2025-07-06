@@ -55,7 +55,7 @@ app.get("/api/v1/websites", authMiddleware, async (req,res) => {
 
 app.delete("/api/v1/website", authMiddleware, async (req, res) => {
     const userId = req.userId;
-    const websiteId = req.userId;
+    const websiteId = req.query.websiteId as string;
 
     await prismaClient.website.update({
         where: {
