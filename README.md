@@ -30,14 +30,14 @@ If your site goes down, Better UpTime notifies you **instantly**—ensuring you 
 
 ## 📦 Tech Stack
 
-| Layer         | Tools / Frameworks                      |
+| Layer         | Tools / Frameworks                       |
 |---------------|------------------------------------------|
 | Frontend      | Next.js, Tailwind CSS, shadcn/ui         |
 | Backend       | Node.js, Express API Routes              |
 | Smart Contracts | Solana (Anchor), Web3.js               |
 | Database      | PostgreSQL (via Prisma ORM)              |
 | Auth          | Clerk                                    |
-| Infra         | Bun / Vercel / Docker                    |
+| Infra         | Bun / Docker                             |
 
 ---
 
